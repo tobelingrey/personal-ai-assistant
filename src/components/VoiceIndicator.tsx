@@ -32,7 +32,7 @@ export const VoiceIndicator: React.FC<VoiceIndicatorProps> = ({
   className = '',
   showAudioLevel = true,
 }) => {
-  const { state, isRunning, audioLevel, trigger, cancel, error } = useVoiceState();
+  const { state, isRunning, audioLevel, trigger, cancel, error, start } = useVoiceState();
 
   const color = stateColors[state];
   const label = stateLabels[state];
@@ -41,15 +41,51 @@ export const VoiceIndicator: React.FC<VoiceIndicatorProps> = ({
   const levelHeight = Math.min(100, audioLevel * 500);
 
   const handleClick = async () => {
-    if (state === 'Idle') {
+    if (!isRunning) {
+      await start();
+    } else if (state === 'Idle') {
       await trigger();
     } else if (state === 'Listening' || state === 'Speaking') {
       await cancel();
     }
   };
 
+  // Show start button when not running
   if (!isRunning) {
-    return null;
+    return (
+      <div className={`voice-indicator ${className}`} style={styles.container}>
+        <button
+          onClick={handleClick}
+          style={{
+            ...styles.button,
+            borderColor: '#6b7280',
+          }}
+          title="Start voice system"
+        >
+          <div style={styles.innerCircle}>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#6b7280"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </div>
+        </button>
+        <span style={{ ...styles.label, color: '#6b7280' }}>Start Voice</span>
+        {error && (
+          <span style={styles.error}>{error}</span>
+        )}
+      </div>
+    );
   }
 
   return (

@@ -16,7 +16,7 @@ const STORAGE_KEY = 'jarvis:voiceSettings';
 
 const DEFAULT_SETTINGS: VoiceSettings = {
   ttsEnabled: true,
-  wakeWordEnabled: false,
+  wakeWordEnabled: true,
   wakeWordSensitivity: 0.5,
 };
 
@@ -59,11 +59,16 @@ export function useVoiceSettings() {
   }, []);
 
   const setWakeWordSensitivity = useCallback((sensitivity: number) => {
-    // Clamp to 0.0 - 1.0
+    // Clamp frontend value to 0.0 - 1.0
     const clamped = Math.max(0, Math.min(1, sensitivity));
     setSettings((prev) => ({ ...prev, wakeWordSensitivity: clamped }));
+    // Map frontend 0-1 to backend 0.5-2.5 for proper sensitivity scaling
+    // Formula: backendSensitivity = 0.5 + (sliderValue * 2.0)
+    // - 0% (0.0) → 0.5 (less sensitive, higher threshold)
+    // - 100% (1.0) → 2.5 (more sensitive, lower threshold)
+    const backendSensitivity = 0.5 + (clamped * 2.0);
     // Sync with Tauri backend
-    invoke('set_wake_word_sensitivity', { sensitivity: clamped }).catch(() => {});
+    invoke('set_wake_word_sensitivity', { sensitivity: backendSensitivity }).catch(() => {});
   }, []);
 
   // Check if wake word is available (OpenWakeWord doesn't need API key)

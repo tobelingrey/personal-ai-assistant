@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { Chat } from './components/Chat';
 import { VoiceSettings } from './components/VoiceSettings';
+import { VoiceIndicator } from './components/VoiceIndicator';
 import { EvolutionPanel } from './components/evolution';
 import { DebugLog } from './components/DebugLog';
 import './App.css';
@@ -9,11 +11,23 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEvolutionOpen, setIsEvolutionOpen] = useState(false);
 
+  // Auto-start voice system on mount with a delay for Tauri initialization
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      invoke('start_voice_listening').catch((err) => {
+        console.warn('Failed to auto-start voice system:', err);
+      });
+    }, 1000); // 1 second delay for Tauri to initialize
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>J.A.R.V.I.S.</h1>
         <div className="header-actions">
+          <VoiceIndicator />
           <button
             className="settings-button"
             onClick={() => setIsEvolutionOpen(true)}

@@ -16,25 +16,27 @@
 
 ## Active Tasks
 
-### 1. Wake Word Integration (Porcupine)
+### 1. Wake Word Integration (OpenWakeWord) ✅
 
-**Situation:** Voice state machine exists but wake word is stubbed (always returns false).
+**Situation:** Voice state machine exists with OpenWakeWord integration, but multiple frontend bugs prevented it from working.
 
-**Challenge:** Integrate Porcupine SDK with "Jarvis" keyword for hands-free activation.
+**Challenge:** Fix frontend integration so wake word detection actually triggers listening.
 
-**Files:** `src-tauri/src/voice/wake_word.rs`, `state_machine.rs`, `server/src/config.ts`
+**Files:** `src-tauri/src/voice/wake_word.rs`, `state_machine.rs`, `src/App.tsx`, `src/components/VoiceIndicator.tsx`, `src/hooks/useVoiceSettings.ts`
 
 **Verification:** Say "Jarvis" → system transitions to LISTENING state
 
-**Blocker:** Requires `PICOVOICE_ACCESS_KEY` environment variable
+**Note:** Uses OpenWakeWord (not Porcupine) - no API key required.
 
-- [ ] Add `pv_porcupine` crate to Cargo.toml
-- [ ] Implement Porcupine initialization in wake_word.rs
-- [ ] Connect wake word detection to state machine
-- [ ] Add sensitivity setting (0.0-1.0, default 0.5)
-- [ ] Add PICOVOICE_ACCESS_KEY to config.ts
-- [ ] Test wake word triggers listening
-- [ ] Add wake word toggle to VoiceSettings UI
+- [x] OpenWakeWord integration in wake_word.rs (completed earlier)
+- [x] Connect wake word detection to state machine (completed earlier)
+- [x] Add sensitivity setting slider to VoiceSettings UI
+- [x] Add wake word toggle to VoiceSettings UI
+- [x] **Fix:** Add VoiceIndicator to App.tsx (was never rendered)
+- [x] **Fix:** Add auto-start voice system on app mount
+- [x] **Fix:** VoiceIndicator shows "Start Voice" when not running (was returning null)
+- [x] **Fix:** Sensitivity mapping (frontend 0-1 → backend 0.5-2.5)
+- [x] **Fix:** Enable wake word by default (was disabled)
 
 ---
 
@@ -174,6 +176,29 @@
 > Claude updates this section at the end of each session.
 > Format: Date, what was done, what's next, any blockers.
 
+### 2026-01-26 (Session 3)
+**Completed:**
+- Task 1: Wake Word Integration - Fixed critical frontend bugs preventing wake word from working:
+  - Added VoiceIndicator component to App.tsx header (was never rendered)
+  - Added auto-start voice system on app mount (1 second delay for Tauri init)
+  - Fixed VoiceIndicator to show "Start Voice" button when not running (was returning null)
+  - Fixed sensitivity mapping: frontend slider 0-1 now maps to backend 0.5-2.5
+  - Changed wake word to enabled by default (was disabled)
+
+**Files Modified:**
+- `src/App.tsx` - Added VoiceIndicator import/render, auto-start useEffect
+- `src/components/VoiceIndicator.tsx` - Added start button when not running
+- `src/hooks/useVoiceSettings.ts` - Fixed sensitivity mapping, enabled wake word by default
+
+**Next:**
+- Test wake word detection end-to-end
+- Sprint 3: Quality of Life features (multi-model routing, Silero VAD, notifications)
+
+**Blockers:**
+- None
+
+---
+
 ### 2026-01-26 (Session 2)
 **Completed:**
 - Task 3: File Splitting
@@ -185,11 +210,11 @@
   - evolution.ts routes, EvolutionPanel.tsx UI
 
 **Next:**
-- Task 1: Wake Word Integration (requires PICOVOICE_ACCESS_KEY)
+- Task 1: Wake Word Integration
 - Sprint 3: Quality of Life features
 
 **Blockers:**
-- Wake word requires PICOVOICE_ACCESS_KEY environment variable
+- None (switched from Porcupine to OpenWakeWord - no API key required)
 
 ---
 
@@ -200,11 +225,11 @@
 - Task 2: Entity Resolution Layer (verified complete - 19 tests passing)
 
 **Next:**
-- Task 1: Wake Word Integration (requires PICOVOICE_ACCESS_KEY)
+- Task 1: Wake Word Integration
 - Task 3: File Splitting (finance.ts and entity.ts)
 
 **Blockers:**
-- Wake word requires PICOVOICE_ACCESS_KEY environment variable
+- None
 
 ---
 
@@ -220,8 +245,8 @@
 - Start Task Z
 
 **Blockers:**
-- Need PICOVOICE_ACCESS_KEY for wake word
 - Issue with X: [description]
+- (or "None" if no blockers)
 
 ---
 
