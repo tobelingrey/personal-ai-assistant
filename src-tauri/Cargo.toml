@@ -1,0 +1,31 @@
+[package]
+name = "jarvis"
+version = "0.1.0"
+description = "Local-first AI personal assistant"
+authors = ["you"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Voice/Audio dependencies
+cpal = "0.15"                                      # Audio capture
+ort = { version = "2.0.0-rc.9", features = ["download-binaries", "ndarray"] }  # ONNX Runtime
+ringbuf = "0.4"                                    # Ring buffer for audio
+rubato = "0.15"                                    # Resampling (48kHz → 16kHz)
+tokio = { version = "1", features = ["sync", "rt-multi-thread"] }
+ndarray = "0.16"                                   # Array operations for ONNX
+thiserror = "2"                                    # Error handling
+log = "0.4"                                        # Logging
+env_logger = "0.11"                                # Logging implementation
+parking_lot = "0.12"                               # Faster mutexes
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
