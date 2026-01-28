@@ -3,13 +3,20 @@
   "version": "0.1.0",
   "description": "Local-first AI personal assistant",
   "type": "module",
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev:all": "pnpm --parallel --filter @jarvis/cli --filter jarvis-server --filter jarvis dev",
+    "build:all": "pnpm --filter @jarvis/core build && pnpm --filter @jarvis/cli build",
+    "test": "pnpm --filter jarvis-server test",
+    "check:loc": "tsx scripts/check-loc.ts",
+    "jarvis": "pnpm --filter @jarvis/cli exec jarvis"
   },
   "dependencies": {
+    "@jarvis/core": "workspace:*",
     "@tauri-apps/api": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -19,6 +26,8 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
+    "glob": "^10.3.10",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.12"
   }

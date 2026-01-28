@@ -4,25 +4,11 @@
  * Communicates with the Express backend for chat and data operations.
  */
 
+import type { BrainResponse, Message } from '@jarvis/core';
+
+export type { BrainResponse, Message };
+
 const API_BASE = 'http://localhost:3001';
-
-export interface BrainResponse {
-  intent: 'store' | 'query' | 'conversation';
-  dataType: 'food' | 'task' | 'entity' | 'transaction' | null;
-  extracted: Record<string, unknown> | null;
-  missingFields: string[];
-  response: string;
-  followUpQuestion: string | null;
-  confidence: number;
-  saved?: boolean;
-  savedId?: number;
-}
-
-export interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-}
 
 export interface HealthStatus {
   status: 'ok' | 'degraded';

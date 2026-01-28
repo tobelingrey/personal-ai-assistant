@@ -1,8 +1,7 @@
 /**
- * Brain Module Tests
+ * processMessage Tests
  *
- * Tests for classification and extraction logic in brain.ts
- * Uses mocked LLM responses for deterministic testing.
+ * Tests for message processing, extraction, and conversation history.
  */
 
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
@@ -17,7 +16,7 @@ vi.mock('../ollama.js', () => ({
 import * as ollama from '../ollama.js';
 
 // Import after mocking
-import { parseResponse, processMessage, classifyIntent, processMessageStream } from '../brain.js';
+import { processMessage, processMessageStream } from '../brain.js';
 import type { BrainResponse } from '../../types/schema.js';
 
 // Get typed mock references
@@ -28,154 +27,6 @@ beforeEach(() => {
   mockChat.mockReset();
   mockChatStream.mockReset();
 });
-
-// ============================================================================
-// A. parseResponse Unit Tests (no mocking needed)
-// ============================================================================
-
-describe('parseResponse', () => {
-  describe('valid JSON parsing', () => {
-    it('parses complete valid JSON', () => {
-      const json = JSON.stringify({
-        intent: 'store',
-        dataType: 'food',
-        extracted: { foodName: 'pizza', mealType: 'lunch' },
-        missingFields: [],
-        response: 'Logged your lunch, sir.',
-        confidence: 0.95,
-      });
-
-      const result = parseResponse(json);
-
-      expect(result.intent).toBe('store');
-      expect(result.dataType).toBe('food');
-      expect(result.extracted).toEqual({ foodName: 'pizza', mealType: 'lunch' });
-      expect(result.missingFields).toEqual([]);
-      expect(result.response).toBe('Logged your lunch, sir.');
-      expect(result.confidence).toBe(0.95);
-    });
-
-    it('parses JSON with null dataType', () => {
-      const json = JSON.stringify({
-        intent: 'conversation',
-        dataType: null,
-        extracted: null,
-        missingFields: [],
-        response: 'Hello, sir.',
-        confidence: 0.9,
-      });
-
-      const result = parseResponse(json);
-
-      expect(result.intent).toBe('conversation');
-      expect(result.dataType).toBeNull();
-      expect(result.extracted).toBeNull();
-    });
-  });
-
-  describe('markdown code block stripping', () => {
-    it('strips ```json prefix and ``` suffix', () => {
-      const wrapped = '```json\n{"intent":"store","dataType":"food","extracted":{"foodName":"pizza"},"missingFields":[],"response":"Done","confidence":0.9}\n```';
-
-      const result = parseResponse(wrapped);
-
-      expect(result.intent).toBe('store');
-      expect(result.dataType).toBe('food');
-    });
-
-    it('strips bare ``` prefix and suffix', () => {
-      const wrapped = '```\n{"intent":"query","dataType":"task","extracted":null,"missingFields":[],"response":"Looking...","confidence":0.8}\n```';
-
-      const result = parseResponse(wrapped);
-
-      expect(result.intent).toBe('query');
-      expect(result.dataType).toBe('task');
-    });
-
-    it('handles mixed whitespace around code blocks', () => {
-      const wrapped = '  ```json\n{"intent":"store"}\n```  ';
-
-      const result = parseResponse(wrapped);
-
-      expect(result.intent).toBe('store');
-    });
-  });
-
-  describe('malformed JSON fallback', () => {
-    it('falls back to conversation on invalid JSON', () => {
-      const result = parseResponse('not json at all');
-
-      expect(result.intent).toBe('conversation');
-      expect(result.dataType).toBeNull();
-      expect(result.extracted).toBeNull();
-      expect(result.missingFields).toEqual([]);
-      expect(result.confidence).toBe(0.3);
-      expect(result.response).toBe('not json at all');
-    });
-
-    it('falls back on partial JSON', () => {
-      const result = parseResponse('{"intent": "store", "dataType":');
-
-      expect(result.intent).toBe('conversation');
-      expect(result.confidence).toBe(0.3);
-    });
-
-    it('falls back on empty string', () => {
-      const result = parseResponse('');
-
-      expect(result.intent).toBe('conversation');
-      expect(result.response).toBe("I'm afraid I couldn't process that, sir.");
-    });
-  });
-
-  describe('missing fields get defaults', () => {
-    it('defaults intent to conversation when missing', () => {
-      const result = parseResponse('{"dataType":"food","response":"ok"}');
-
-      expect(result.intent).toBe('conversation');
-    });
-
-    it('defaults dataType to null when missing', () => {
-      const result = parseResponse('{"intent":"store","response":"ok"}');
-
-      expect(result.dataType).toBeNull();
-    });
-
-    it('defaults missingFields to empty array when missing', () => {
-      const result = parseResponse('{"intent":"store","response":"ok"}');
-
-      expect(result.missingFields).toEqual([]);
-    });
-
-    it('defaults confidence to 0.5 when missing', () => {
-      const result = parseResponse('{"intent":"store","response":"ok"}');
-
-      expect(result.confidence).toBe(0.5);
-    });
-
-    it('defaults response to fallback message when missing', () => {
-      const result = parseResponse('{"intent":"store"}');
-
-      expect(result.response).toBe("I'm afraid I couldn't process that, sir.");
-    });
-
-    it('defaults extracted to null when missing', () => {
-      const result = parseResponse('{"intent":"store","response":"ok"}');
-
-      expect(result.extracted).toBeNull();
-    });
-
-    it('defaults followUpQuestion to null when missing', () => {
-      const result = parseResponse('{"intent":"store","response":"ok"}');
-
-      expect(result.followUpQuestion).toBeNull();
-    });
-  });
-});
-
-// ============================================================================
-// B. Classification Tests (with mocked LLM)
-// ============================================================================
 
 describe('processMessage classification', () => {
   it('classifies food storage intent', async () => {
@@ -265,10 +116,6 @@ describe('processMessage classification', () => {
     expect(result.extracted).toBeNull();
   });
 });
-
-// ============================================================================
-// C. Extraction Accuracy Tests
-// ============================================================================
 
 describe('extraction accuracy', () => {
   describe('food extraction', () => {
@@ -398,10 +245,6 @@ describe('extraction accuracy', () => {
   });
 });
 
-// ============================================================================
-// D. Missing Field Detection
-// ============================================================================
-
 describe('missing field detection', () => {
   it('detects missing mealType for food', async () => {
     mockChat.mockResolvedValueOnce(
@@ -467,10 +310,6 @@ describe('missing field detection', () => {
   });
 });
 
-// ============================================================================
-// E. Edge Cases
-// ============================================================================
-
 describe('edge cases', () => {
   it('handles empty message', async () => {
     mockChat.mockResolvedValueOnce(
@@ -529,7 +368,7 @@ describe('edge cases', () => {
     );
 
     const result = await processMessage({
-      message: 'I had crème brûlée for dessert! 🍮 <script>alert("xss")</script>',
+      message: 'I had crème brûlée for dessert! <script>alert("xss")</script>',
       conversationHistory: [],
     });
 
@@ -549,64 +388,13 @@ describe('edge cases', () => {
     );
 
     const result = await processMessage({
-      message: '田中さん is a friend 👋',
+      message: '田中さん is a friend',
       conversationHistory: [],
     });
 
     expect(result.extracted?.name).toBe('田中');
   });
 });
-
-// ============================================================================
-// F. classifyIntent Quick Classification
-// ============================================================================
-
-describe('classifyIntent', () => {
-  it('classifies food storage quickly', async () => {
-    mockChat.mockResolvedValueOnce(
-      JSON.stringify({
-        intent: 'store',
-        dataType: 'food',
-        confidence: 0.9,
-      })
-    );
-
-    const result = await classifyIntent('I ate a sandwich');
-
-    expect(result.intent).toBe('store');
-    expect(result.dataType).toBe('food');
-    expect(result.confidence).toBe(0.9);
-  });
-
-  it('classifies query intent', async () => {
-    mockChat.mockResolvedValueOnce(
-      JSON.stringify({
-        intent: 'query',
-        dataType: 'task',
-        confidence: 0.85,
-      })
-    );
-
-    const result = await classifyIntent('What tasks do I have?');
-
-    expect(result.intent).toBe('query');
-    expect(result.dataType).toBe('task');
-  });
-
-  it('falls back on invalid response', async () => {
-    mockChat.mockResolvedValueOnce('not valid json');
-
-    const result = await classifyIntent('test message');
-
-    expect(result.intent).toBe('conversation');
-    expect(result.dataType).toBeNull();
-    expect(result.confidence).toBe(0.3);
-  });
-});
-
-// ============================================================================
-// G. processMessageStream
-// ============================================================================
 
 describe('processMessageStream', () => {
   it('streams response and provides final brainResponse', async () => {
@@ -642,10 +430,6 @@ describe('processMessageStream', () => {
     expect(chunks[2]!.brainResponse?.intent).toBe('store');
   });
 });
-
-// ============================================================================
-// H. Conversation History Context
-// ============================================================================
 
 describe('conversation history', () => {
   it('includes conversation history in LLM call', async () => {

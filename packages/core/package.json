@@ -1,0 +1,42 @@
+{
+  "name": "@jarvis/core",
+  "version": "0.1.0",
+  "description": "Jarvis shared types and configuration",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    },
+    "./types/schema": {
+      "types": "./dist/types/schema.d.ts",
+      "import": "./dist/types/schema.js"
+    },
+    "./types/domains": {
+      "types": "./dist/types/domains.d.ts",
+      "import": "./dist/types/domains.js"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.32.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}
