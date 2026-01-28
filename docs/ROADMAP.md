@@ -162,6 +162,8 @@
 - [ ] Silero VAD (replace energy-based)
 - [ ] Notification system (task reminders)
 - [ ] Data export/import
+- [ ] Domain-specific query routes (GET /food/logs, GET /tasks, GET /entities)
+- [ ] Move hardcoded thresholds to config (PENDING_ENTRY_THRESHOLD, history max, etc.)
 
 ### Future
 - [ ] Dashboard views with charts
@@ -175,6 +177,35 @@
 
 > Claude updates this section at the end of each session.
 > Format: Date, what was done, what's next, any blockers.
+
+### 2026-01-28 (Session 4)
+**Completed:**
+- Documentation cleanup and archival:
+  - Created `docs/archive/` directory
+  - Archived 4 obsolete docs: CLAUDE_REFACTOR.md, JARVIS_REFACTOR.md, jarvis-v2-structure.md, jarvis-vs-moltbot-analysis.md
+- Filter system improvements:
+  - Created `packages/core/src/types/filters.ts` with domain-specific filter types (BaseFilters, TransactionFilters, TaskFilters, FoodFilters, EntityFilters)
+  - Updated finance repository to use TransactionFilters with category/type support
+  - Updated finance routes to extract category/type query params
+  - Added database migration 002 with missing indexes (idx_transactions_type, idx_food_logs_meal_type, idx_tasks_priority)
+- Updated CLAUDE.md with filter type guidance
+
+**Files Modified:**
+- `packages/core/src/types/filters.ts` - NEW: Domain-specific filter types
+- `packages/core/src/types/index.ts` - Export filters
+- `server/src/services/finance/repository.ts` - Use TransactionFilters
+- `server/src/routes/finance.ts` - Extract category/type params
+- `server/src/services/database.ts` - Add migration 002, runPendingMigrations()
+- `CLAUDE.md` - Added filter type rule
+
+**Next:**
+- Sprint 3: Quality of Life features
+- Add query routes for other domains (food, task, entity)
+
+**Blockers:**
+- None
+
+---
 
 ### 2026-01-26 (Session 3)
 **Completed:**

@@ -7,8 +7,8 @@ import type {
   Transaction,
   TransactionCreate,
   TransactionType,
-  FilterOptions,
 } from '../../types/domains.js';
+import type { TransactionFilters } from '@jarvis/core';
 import type { TransactionRow } from './types.js';
 
 /**
@@ -64,7 +64,7 @@ export async function getTransactionById(id: number): Promise<Transaction | null
 /**
  * Get all transactions with optional filters
  */
-export async function getAllTransactions(filters: FilterOptions = {}): Promise<Transaction[]> {
+export async function getAllTransactions(filters: TransactionFilters = {}): Promise<Transaction[]> {
   let sql = 'SELECT * FROM transactions WHERE 1=1';
   const params: unknown[] = [];
 
@@ -76,6 +76,16 @@ export async function getAllTransactions(filters: FilterOptions = {}): Promise<T
   if (filters.endDate) {
     sql += ' AND date <= ?';
     params.push(filters.endDate);
+  }
+
+  if (filters.category) {
+    sql += ' AND category = ?';
+    params.push(filters.category);
+  }
+
+  if (filters.type) {
+    sql += ' AND transaction_type = ?';
+    params.push(filters.type);
   }
 
   sql += ' ORDER BY date DESC, created_at DESC';

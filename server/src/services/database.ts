@@ -16,8 +16,16 @@ let db: SqlJsDatabase | null = null;
  * Migrations array - add new migrations to the end
  * Each migration runs in order on first startup
  */
-const migrations: string[] = [
-  // 001_initial.sql content is loaded separately
+const migrations: { name: string; sql: string }[] = [
+  // 001_initial.sql content is loaded separately in runInitialSchema
+  {
+    name: '002_add_filter_indexes',
+    sql: `
+      CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type);
+      CREATE INDEX IF NOT EXISTS idx_food_logs_meal_type ON food_logs(meal_type);
+      CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
+    `,
+  },
 ];
 
 /**
@@ -43,6 +51,9 @@ export async function initDatabase(): Promise<void> {
 
   // Run initial schema
   await runInitialSchema();
+
+  // Run any pending migrations
+  await runPendingMigrations();
 
   // Save database
   saveDatabase();
@@ -188,6 +199,26 @@ async function runInitialSchema(): Promise<void> {
   db.run("INSERT INTO migrations (name) VALUES ('001_initial')");
 
   console.log('[Database] Applied initial schema');
+}
+
+/**
+ * Run any pending migrations from the migrations array
+ */
+async function runPendingMigrations(): Promise<void> {
+  if (!db) throw new Error('Database not initialized');
+
+  for (const migration of migrations) {
+    // Check if migration has been applied
+    const result = db.exec(`SELECT name FROM migrations WHERE name = '${migration.name}'`);
+    if (result.length > 0 && result[0]?.values.length) {
+      continue; // Already applied
+    }
+
+    // Apply migration
+    db.run(migration.sql);
+    db.run(`INSERT INTO migrations (name) VALUES ('${migration.name}')`);
+    console.log(`[Database] Applied migration: ${migration.name}`);
+  }
 }
 
 /**

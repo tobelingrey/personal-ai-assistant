@@ -14,7 +14,7 @@ import {
   getPeriodSummary,
   getCategoryBreakdown,
 } from '../services/finance/index.js';
-import type { TransactionCreate } from '../types/domains.js';
+import type { TransactionCreate, TransactionType } from '../types/domains.js';
 
 const router = Router();
 
@@ -24,13 +24,21 @@ const router = Router();
  */
 router.get('/transactions', async (req: Request, res: Response) => {
   try {
-    const { startDate, endDate, limit, offset } = req.query;
+    const { startDate, endDate, limit, offset, category, type } = req.query;
+
+    // Validate type if provided
+    if (type && !['income', 'expense'].includes(type as string)) {
+      res.status(400).json({ error: 'Type must be "income" or "expense"' });
+      return;
+    }
 
     const transactions = await getAllTransactions({
       startDate: startDate as string | undefined,
       endDate: endDate as string | undefined,
       limit: limit ? parseInt(limit as string, 10) : undefined,
       offset: offset ? parseInt(offset as string, 10) : undefined,
+      category: category as string | undefined,
+      type: type as TransactionType | undefined,
     });
 
     res.json({
